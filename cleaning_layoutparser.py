@@ -143,6 +143,19 @@ def convert_all_pages(pdf_path):
         all_text += convert_single_page(page_image, model, ocr_agent)
     return all_text
 
-if __name__ == "__main__":
-    text = convert_all_pages("test papers/textrank algorithm paper.pdf")
-    print(text)
+def dump_to_txtfile(paper_text, file_name):
+    """
+    Dumps the extracted text to a text file for further processing.
+
+    Parameters
+    ----------
+    paper_text : list
+        The extracted text from the paper
+    file_name : str
+        The name for the new text file
+    """
+    
+    txt_file = open(file_name, "w")
+    for txt in paper_text:
+        txt_file.write(txt + " ")
+    txt_file.close()

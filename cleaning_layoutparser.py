@@ -3,15 +3,7 @@ import numpy as np
 import layoutparser as lp
 import re
 
-model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config', 
-                                 extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.7],
-                                 label_map={0: "Text", 1: "Title", 2: "List", 3:"Table", 4:"Figure"})
-
-ocr_agent = lp.TesseractAgent(languages='eng')
-
-pdf_images = convert_from_path("test papers/textrank algorithm paper.pdf")
-
-def sort_textblock_ids(page_img):
+def sort_textblock_ids(page_img, model):
     """
     Sorts the text block IDs in order as they appear on the page (i.e the
     first paragraph is ID 0, next is ID 1, etc).
@@ -85,7 +77,7 @@ def clean_text(text):
     return text
 
 
-def convert_single_page(page_img):
+def convert_single_page(page_img, model, ocr_agent):
     """
     Converts a single PDF page into plain text.
 
@@ -101,7 +93,7 @@ def convert_single_page(page_img):
         paragraph of text.
     """    
 
-    text_blocks = sort_textblock_ids(page_img)
+    text_blocks = sort_textblock_ids(page_img, model)
     
     for block in text_blocks:
 
@@ -138,9 +130,19 @@ def convert_all_pages(pdf_path):
     list
         A list containing the entire PDF's text. 
     """
+    model = lp.Detectron2LayoutModel('lp://PubLayNet/mask_rcnn_X_101_32x8d_FPN_3x/config', 
+                                 extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.7],
+                                 label_map={0: "Text", 1: "Title", 2: "List", 3:"Table", 4:"Figure"})
+
+    ocr_agent = lp.TesseractAgent(languages='eng')
+
     pdf_images = convert_from_path(pdf_path)
     all_text = []
     for page in pdf_images:
         page_image = np.asarray(page)
-        all_text += convert_single_page(page_image)
+        all_text += convert_single_page(page_image, model, ocr_agent)
     return all_text
+
+if __name__ == "__main__":
+    text = convert_all_pages("test papers/textrank algorithm paper.pdf")
+    print(text)
